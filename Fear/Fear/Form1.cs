@@ -14,12 +14,19 @@ namespace Fear
     {
         Random rand = new Random(Guid.NewGuid().GetHashCode());
 
+        bool pause = false;
         bool end = false;
         int Enemies = 100;
+        int ticks = 0;
+
+        bool IsSelecting = false;
+        float X0, Y0;
 
         float Money = 0;
 
         List<FearObject> BlueTeam = new List<FearObject>() { };
+
+        List<FearObject> Selected = null;
 
         List<FearObject> RedTeam = new List<FearObject>() {};
 
@@ -81,6 +88,8 @@ namespace Fear
 
         private void timer1_Tick(object sender, EventArgs e)
         {
+            if (pause || end) return;
+
             foreach (var fo in BlueTeam.Where(f => !f.IsDead))
             {
                 fo.Act();
@@ -111,13 +120,16 @@ namespace Fear
                 timer1.Stop();
                 if (!end)
                 {
-                    MessageBox.Show("Victory!!!");
+                    //MessageBox.Show("Victory!!!");
                     Money += RedTeam.Count * 3;
                     MoneyTB.Text = Money.ToString();
 
                     // for free
                     for (int i = 0; i < 10; i++)
                         BlueTeam.Add(GetRandomSoldier(Brushes.BlueViolet));
+
+                    BlueTeam.Add(GetEliteRandomSoldier(Brushes.BlueViolet));
+
                     foreach (var fo in BlueTeam)
                     {
                         fo.BaseFitness += rand.Next(0, 3);
@@ -141,7 +153,8 @@ namespace Fear
                 }
             }
 
-            Invalidate();
+            if(++ticks % 5 == 0)
+                Invalidate();
         }
 
         private string GetStatForTeam(int counter, List<FearObject> team)
@@ -157,7 +170,18 @@ namespace Fear
 
         private void button1_Click(object sender, EventArgs e)
         {
-            Restart();
+            if (pause == false)
+            {
+                timer1.Stop();
+                pause = true;
+                button1.Text = "Resume";
+            }
+            else if (pause == true)
+            {
+                timer1.Start();
+                pause = false;
+                button1.Text = "Pause";
+            }
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -166,22 +190,29 @@ namespace Fear
 
             Enemies += 10;
 
+            int x = rand.Next(5,15);
+
+            int y = rand.Next(200, 400);
+
             foreach ( var fo in BlueTeam)
             {
-                fo.P = new FPoint { X = rand.Next(10, 25), Y = rand.Next(380, 400) };
+                //fo.P = new FPoint { X = x + rand.Next(10, 25), Y = y + rand.Next(20, 40) };
                 fo.Stamina = 100;
                 fo.Fitness = fo.BaseFitness;
                 fo.Moral = MoralMode.Normal;
                 fo.Fear = 0;
             }
 
+            Formations.BuildFormation(BlueTeam, 5, 25);
+
             for (int i = 0; i < Enemies; i++)
             {
                 var soldier = GetRandomSoldier(Brushes.Red);
                 RedTeam.Add(soldier);
 
-                soldier.P = new FPoint { X = rand.Next(400, 425), Y = rand.Next(300, 400) };
+                //soldier.P = new FPoint { X = rand.Next(400, 425), Y = rand.Next(300, 400) };
             }
+            Formations.BuildFormation(RedTeam, 500, 525);
 
             foreach (var fo in BlueTeam)
             {
@@ -348,6 +379,52 @@ namespace Fear
                 }
             }
             UpdateStats();
+        }
+
+        private void Form1_MouseUp(object sender, MouseEventArgs e)
+        {
+            // Do nothing it we're not selecting an area.
+            if (!IsSelecting) return;
+
+            // Save the new point.
+            float X1 = e.X;
+            float Y1 = e.Y;
+
+            if (Selected != null)
+            {
+                var Targets = RedTeam.Where(o => o.P.X > X0 && o.P.X < X1 && o.P.Y > Y0 && o.P.Y < Y1).ToList();
+
+                foreach (var s in Selected)
+                {
+                    s.Target = s.GetClosesLeavingTarget(Targets);
+                }
+                Selected = null;
+            }
+            else
+            {
+                Selected = BlueTeam.Where(o => o.P.X > X0 && o.P.X < X1 && o.P.Y > Y0 && o.P.Y < Y1).ToList();
+            }
+
+            IsSelecting = false;
+        }
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            timer1.Interval = Math.Max(timer1.Interval / 2, 1);
+        }
+
+        private void button9_Click(object sender, EventArgs e)
+        {
+            timer1.Interval *= 2;
+        }
+
+        private void Form1_MouseDown(object sender, MouseEventArgs e)
+        {
+            IsSelecting = true;
+
+            // Save the start point.
+            X0 = e.X;
+            Y0 = e.Y;
         }
     }
 }

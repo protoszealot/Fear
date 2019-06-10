@@ -8,11 +8,11 @@ using System.Windows.Forms;
 
 namespace Fear
 {
-    enum MoralMode { Normal, Panic, Anger};
+    public enum MoralMode { Normal, Panic, Charge};
 
-    enum HealthState { Healthy, Wounded, HeavyWounded, Dead}
+    public enum HealthState { Healthy, Wounded, HeavyWounded, Dead}
 
-    class FearObject
+    public class FearObject
     {
         Random random = new Random(Guid.NewGuid().GetHashCode());
 
@@ -137,9 +137,9 @@ namespace Fear
 
             switch (Moral)
             {
-                case MoralMode.Normal: DoNormalProgram(); break;
                 case MoralMode.Panic: DoPanicProgram(); break;
-                case MoralMode.Anger: DoAngerProgram(); break;
+                case MoralMode.Charge:
+                case MoralMode.Normal: DoNormalProgram(); break;
             }
         }
 
@@ -160,9 +160,9 @@ namespace Fear
 
         private void DoNormalProgram()
         {
-            if (Target == null || Target.IsDead || random.Next(0,10) == 0)
+            if (Target == null || Target.IsDead || random.Next(0, 50) == 0)
             {
-                Target = GetClosesLeavingTarget();
+                Target = GetClosesLeavingTarget(AllEnemies);
             }
 
             if (Target == null)
@@ -180,13 +180,15 @@ namespace Fear
             }
         }
 
-        private FearObject GetClosesLeavingTarget()
+        public FearObject GetClosesLeavingTarget(IEnumerable<FearObject> enemies)
         {
             float minD = 10000000;
             FearObject closest = null;
 
-            foreach (var en in AllEnemies.Where(en => !en.IsDead))
+            foreach (var en in enemies.Where(en => !en.IsDead))
             {
+                if (Math.Abs(this.P.X - en.P.X) > minD) continue;
+                if (Math.Abs(this.P.Y - en.P.Y) > minD) continue;
                 float d = Distance(this.P, en.P);
                 if (minD > d)
                 {
@@ -200,8 +202,13 @@ namespace Fear
 
         public static float Distance(FPoint p1, FPoint p2)
         {
-            float Dx = p1.X - p2.X;
-            float Dy = p1.Y - p2.Y;
+            return Distance(p1, p2.X, p2.Y);
+        }
+
+        public static float Distance(FPoint p1, float x, float y)
+        {
+            float Dx = p1.X - x;
+            float Dy = p1.Y - y;
             return (float)Math.Sqrt(Dx * Dx + Dy * Dy);
         }
 
@@ -261,8 +268,11 @@ namespace Fear
         {
             if (Stamina < 33)
             {
-                if (random.Next(0, 100) > 90) Stamina = Fitness;
-                Fitness *= 0.9995F; // Every time you exaust yourslf it is harder for you to get to normal
+                if (random.Next(0, 100) > 95) Stamina = Fitness;
+                Fitness *= 0.985F; // Every time you exaust yourslf it is harder for you to get to normal
+
+                if (Fitness < 40 && random.Next(0, 100) > 95)
+                    Fitness = 55;
 
                 return 0;
             }
@@ -274,7 +284,10 @@ namespace Fear
                 baseSpeed *= 1.5F;
             }
 
-            return baseSpeed * (Stamina) / (100);
+            if (Moral == MoralMode.Charge)
+                return baseSpeed * 3 / 4;
+
+            return baseSpeed / 2;
         }
 
         internal void MoveTowardsTarget()
@@ -287,6 +300,11 @@ namespace Fear
 
             float distance = DistanceToTarget;
 
+            if (DistanceToTarget < 10)
+                Moral = MoralMode.Charge;
+            else
+                Moral = MoralMode.Normal;
+
             if (distance < 5 + step)
             {
                 step = Math.Max(0.5F, distance - 5);
@@ -295,31 +313,69 @@ namespace Fear
             ReduceStamina(step);
 
             float coeff = step / distance;
-            P.X += coeff * Dx;
-            P.Y += coeff * Dy;
+            float newX = P.X + coeff * Dx;
+            float newY = P.Y + coeff * Dy;
+
+            if (IsThereAnyBodyAtTheFinalPoint(newX, newY, 1))
+            {
+                P.X = 0.8F * newX + 0.2F * P.X;
+                P.Y = 0.8F * newY + 0.2F * P.Y;
+                MoveRandomly(1F);
+            }
+            else
+            {
+                P.X = newX;
+                P.Y = newY;
+            }
+
+            //if (IsThereAnyBodyAtTheFinalPoint(P.X, P.Y, 1))
+            //    MoveRandomly(1F);
+
+            if (IsThereAnyBodyAtTheFinalPoint(P.X, P.Y, 0.5F))
+                MoveRandomly(0.5F);
+
+            if (IsThereAnyBodyAtTheFinalPoint(P.X, P.Y, 0.25F))
+                MoveRandomly(0.25F);
 
             RestricMovement();
         }
 
+        private bool IsThereAnyBodyAtTheFinalPoint(float x, float y, float radius)
+        {
+            foreach (var en in AllFriends.Where(en => !en.IsDead))
+            {
+                if (Math.Abs(this.P.Y - y) > radius) continue;
+                if (Math.Abs(this.P.X - x) > radius) continue;
+
+                if (Distance(en.P, x, y) < radius)
+                    return true;
+            }
+            return false;
+        }
+
         private void ReduceStamina(float step)
         {
-            if (random.Next(0, 100) + 5F*(Fitness / 100F) > 90F )
+            if (Moral != MoralMode.Panic && random.Next(0, 100) + 10F*(Fitness / 100F) > 90F )
             {
                 return;
             }
 
             float baseSpeed = 5;
-            if (step < baseSpeed/2)
+            if (step <= baseSpeed/2)
+            {
+                Stamina -= 0.1F;
+            }
+            else if (step < baseSpeed * 0.75)
+            {
+                Stamina *= 0.985F;
+            }
+            else if (step < baseSpeed * 0.9)
             {
                 Stamina *= 0.98F;
             }
-            else if (step < baseSpeed)
-            {
-                Stamina *= 0.97F;
-            }
             else
             {
-                Stamina *= 0.90F;
+                Stamina *= 0.9F;
             }
         }
 
