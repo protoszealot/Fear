@@ -320,16 +320,13 @@ namespace Fear
             {
                 P.X = 0.8F * newX + 0.2F * P.X;
                 P.Y = 0.8F * newY + 0.2F * P.Y;
-                MoveRandomly(1F);
+                MoveRandomly(0.5F);
             }
             else
             {
                 P.X = newX;
                 P.Y = newY;
             }
-
-            //if (IsThereAnyBodyAtTheFinalPoint(P.X, P.Y, 1))
-            //    MoveRandomly(1F);
 
             if (IsThereAnyBodyAtTheFinalPoint(P.X, P.Y, 0.5F))
                 MoveRandomly(0.5F);
