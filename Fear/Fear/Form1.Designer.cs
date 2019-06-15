@@ -43,11 +43,13 @@
             this.teamRedCounter = new System.Windows.Forms.TextBox();
             this.teamBlueCounter = new System.Windows.Forms.TextBox();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.Restart = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.Restart);
             this.panel1.Controls.Add(this.button9);
             this.panel1.Controls.Add(this.button8);
             this.panel1.Controls.Add(this.button7);
@@ -68,7 +70,7 @@
             // 
             // button9
             // 
-            this.button9.Location = new System.Drawing.Point(53, 39);
+            this.button9.Location = new System.Drawing.Point(53, 31);
             this.button9.Name = "button9";
             this.button9.Size = new System.Drawing.Size(35, 23);
             this.button9.TabIndex = 11;
@@ -78,7 +80,7 @@
             // 
             // button8
             // 
-            this.button8.Location = new System.Drawing.Point(13, 39);
+            this.button8.Location = new System.Drawing.Point(13, 31);
             this.button8.Name = "button8";
             this.button8.Size = new System.Drawing.Size(43, 23);
             this.button8.TabIndex = 10;
@@ -155,7 +157,7 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(13, 14);
+            this.button1.Location = new System.Drawing.Point(13, 6);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 23);
             this.button1.TabIndex = 2;
@@ -184,6 +186,16 @@
             this.timer1.Enabled = true;
             this.timer1.Interval = 10;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
+            // Restart
+            // 
+            this.Restart.Location = new System.Drawing.Point(13, 58);
+            this.Restart.Name = "Restart";
+            this.Restart.Size = new System.Drawing.Size(75, 23);
+            this.Restart.TabIndex = 12;
+            this.Restart.Text = "Restart";
+            this.Restart.UseVisualStyleBackColor = true;
+            this.Restart.Click += new System.EventHandler(this.Restart_Click);
             // 
             // Form1
             // 
@@ -218,6 +230,7 @@
         private System.Windows.Forms.Button button7;
         private System.Windows.Forms.Button button9;
         private System.Windows.Forms.Button button8;
+        private System.Windows.Forms.Button Restart;
     }
 }
 

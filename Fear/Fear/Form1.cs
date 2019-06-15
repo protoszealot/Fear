@@ -16,7 +16,8 @@ namespace Fear
 
         bool pause = false;
         bool end = false;
-        int Enemies = 100;
+        int RedTeamStartCnt = 40;
+        int BlueTeamStartCnt = 100;
         int ticks = 0;
 
         bool IsSelecting = false;
@@ -24,63 +25,65 @@ namespace Fear
 
         float Money = 0;
 
-        List<FearObject> BlueTeam = new List<FearObject>() { };
+        public static FUnit BlueTeam = new FUnit();
+        public static FUnit RedTeam = new FUnit();
 
         List<FearObject> Selected = null;
-
-        List<FearObject> RedTeam = new List<FearObject>() {};
 
         public Form1()
         {
             InitializeComponent();
 
-            Restart();
+            Init();
         }
 
-        void Restart()
+        private void Init()
         {
-            BlueTeam.Clear();
-            RedTeam.Clear();
+            BlueTeam.Init();
+            RedTeam.Init();
 
-            for (int i = 0; i < 400; i++)
+            for (int i = 0; i < BlueTeamStartCnt; i++)
             {
                 var soldier = GetRandomSoldier(Brushes.BlueViolet);
-                BlueTeam.Add(soldier);
+                BlueTeam.Objects.Add(soldier);
 
                 soldier.P = new FPoint { X = rand.Next(10, 25), Y = rand.Next(300, 400) };
             }
 
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < RedTeamStartCnt; i++)
             {
                 var soldier = GetRandomSoldier(Brushes.Red);
-                RedTeam.Add(soldier);
+                RedTeam.Objects.Add(soldier);
 
                 soldier.P = new FPoint { X = rand.Next(400, 425), Y = rand.Next(300, 400) };
             }
 
-            foreach (var fo in BlueTeam)
+            SetTeamsAndEnemies();
+        }
+
+        private void SetTeamsAndEnemies()
+        {
+            foreach (var fo in BlueTeam.Objects)
             {
-                //fo.Target = RedTeam.ElementAt(rand.Next(0,RedTeam.Count()));
-                fo.AllEnemies = RedTeam;
-                fo.AllFriends = BlueTeam;
+                fo.EnemyTeam = RedTeam;
+                fo.MyTeam = BlueTeam;
             }
 
-            foreach (var fo in RedTeam)
+            foreach (var fo in RedTeam.Objects)
             {
-                //fo.Target = BlueTeam.ElementAt(rand.Next(0, BlueTeam.Count()));
-                fo.AllEnemies = BlueTeam;
-                fo.AllFriends = RedTeam;
+                fo.EnemyTeam = BlueTeam;
+                fo.MyTeam = RedTeam;
             }
         }
 
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
-            foreach (var fo in BlueTeam)
+            foreach (var fo in BlueTeam.Objects)
             {
                 fo.FillMe(e);
             }
 
-            foreach (var fo in RedTeam)
+            foreach (var fo in RedTeam.Objects)
             {
                 fo.FillMe(e);
             }
@@ -90,18 +93,21 @@ namespace Fear
         {
             if (pause || end) return;
 
-            foreach (var fo in BlueTeam.Where(f => !f.IsDead))
+            BlueTeam.Update();
+            RedTeam.Update();
+
+            foreach (var fo in BlueTeam.Objects.Where(f => !f.IsDead))
             {
                 fo.Act();
             }
 
-            foreach (var fo in RedTeam.Where(f => !f.IsDead))
+            foreach (var fo in RedTeam.Objects.Where(f => !f.IsDead))
             {
                 fo.Act();
             }
 
-            int blueCounter = BlueTeam.Where(fo => !fo.IsDead).Count();
-            int redCounter = RedTeam.Where(fo => !fo.IsDead).Count();
+            int blueCounter = BlueTeam.Objects.Where(fo => !fo.IsDead).Count();
+            int redCounter = RedTeam.Objects.Where(fo => !fo.IsDead).Count();
 
             UpdateStats();
 
@@ -110,7 +116,7 @@ namespace Fear
                 timer1.Stop();
                 if (!end)
                 {
-                    MessageBox.Show("Defeat!!!");
+                    //MessageBox.Show("Defeat!!!");
                     end = true;
                 }
             }
@@ -121,28 +127,28 @@ namespace Fear
                 if (!end)
                 {
                     //MessageBox.Show("Victory!!!");
-                    Money += RedTeam.Count * 3;
+                    Money += RedTeam.Objects.Count * 3;
                     MoneyTB.Text = Money.ToString();
 
                     // for free
                     for (int i = 0; i < 10; i++)
-                        BlueTeam.Add(GetRandomSoldier(Brushes.BlueViolet));
+                        BlueTeam.Objects.Add(GetRandomSoldier(Brushes.BlueViolet));
 
-                    BlueTeam.Add(GetEliteRandomSoldier(Brushes.BlueViolet));
+                    BlueTeam.Objects.Add(GetEliteRandomSoldier(Brushes.BlueViolet));
 
-                    foreach (var fo in BlueTeam)
+                    foreach (var fo in BlueTeam.Objects)
                     {
                         fo.BaseFitness += rand.Next(0, 3);
                     }
 
-                    BlueTeam = BlueTeam.Where(s => !s.IsDead).ToList();
-                    var dead = RedTeam.Where(s => s.IsDead).Union(BlueTeam.Where(s => s.IsDead));
+                    BlueTeam.Objects = BlueTeam.Objects.Where(s => !s.IsDead).ToList();
+                    var dead = RedTeam.Objects.Where(s => s.IsDead).Union(BlueTeam.Objects.Where(s => s.IsDead));
                     int deadCnt = dead.Count();
 
                     // take Amunition From the dead
                     for (int i = 0; i < 3000; i++)
                     {
-                        var sol = BlueTeam.ElementAt(rand.Next(0, BlueTeam.Count));
+                        var sol = BlueTeam.Objects.ElementAt(rand.Next(0, BlueTeam.Objects.Count));
                         var corpse = dead.ElementAt(rand.Next(0, deadCnt));
                         sol.SwapBetterAmunition(corpse);
                     }
@@ -153,7 +159,7 @@ namespace Fear
                 }
             }
 
-            if(++ticks % 5 == 0)
+            if(++ticks % 3 == 0)
                 Invalidate();
         }
 
@@ -186,45 +192,35 @@ namespace Fear
 
         private void button2_Click(object sender, EventArgs e)
         {
-            RedTeam.Clear();
+            RedTeam.Reset();
 
-            Enemies += 10;
+            RedTeamStartCnt += 10;
 
             int x = rand.Next(5,15);
 
             int y = rand.Next(200, 400);
 
-            foreach ( var fo in BlueTeam)
+            foreach ( var fo in BlueTeam.Objects)
             {
                 //fo.P = new FPoint { X = x + rand.Next(10, 25), Y = y + rand.Next(20, 40) };
                 fo.Stamina = 100;
                 fo.Fitness = fo.BaseFitness;
-                fo.Moral = MoralMode.Normal;
+                fo.Moral = Moral.Normal;
                 fo.Fear = 0;
             }
 
-            Formations.BuildFormation(BlueTeam, 5, 25);
+            Formations.BuildFormation(BlueTeam.Objects, 5, 25);
 
-            for (int i = 0; i < Enemies; i++)
+            for (int i = 0; i < RedTeamStartCnt; i++)
             {
                 var soldier = GetRandomSoldier(Brushes.Red);
-                RedTeam.Add(soldier);
+                RedTeam.Objects.Add(soldier);
 
                 //soldier.P = new FPoint { X = rand.Next(400, 425), Y = rand.Next(300, 400) };
             }
-            Formations.BuildFormation(RedTeam, 500, 525);
+            Formations.BuildFormation(RedTeam.Objects, 500, 525);
 
-            foreach (var fo in BlueTeam)
-            {
-                fo.AllEnemies = RedTeam;
-                fo.AllFriends = BlueTeam;
-            }
-
-            foreach (var fo in RedTeam)
-            {
-                fo.AllEnemies = BlueTeam;
-                fo.AllFriends = RedTeam;
-            }
+            SetTeamsAndEnemies();
 
             end = false;
             timer1.Start();
@@ -242,7 +238,7 @@ namespace Fear
                 BaseFitness = 65 + rand.Next(0, 10),
                 Sword = 5 + rand.Next(0, 20),
                 Shield = 5 + rand.Next(0, 20),
-                Moral = MoralMode.Normal
+                Moral = Moral.Normal
             };
         }
 
@@ -259,7 +255,7 @@ namespace Fear
                 BaseFitness = 75 + rand.Next(0, 10),
                 Sword = 25 + rand.Next(0, 20),
                 Shield = 25 + rand.Next(0, 20),
-                Moral = MoralMode.Normal
+                Moral = Moral.Normal
             };
         }
 
@@ -276,7 +272,7 @@ namespace Fear
                 BaseFitness = 80 + rand.Next(0, 10),
                 Sword = 35 + rand.Next(0, 20),
                 Shield = 35 + rand.Next(0, 20),
-                Moral = MoralMode.Normal
+                Moral = Moral.Normal
             };
         }
 
@@ -287,18 +283,18 @@ namespace Fear
                 Money -= 100;
 
                 for(int i = 0; i < 10; i++)
-                    BlueTeam.Add(GetRandomSoldier(Brushes.BlueViolet));
+                    BlueTeam.Objects.Add(GetRandomSoldier(Brushes.BlueViolet));
             }
             UpdateStats();
         }
 
         private void button6_Click(object sender, EventArgs e)
         {
-            if (Money >= BlueTeam.Count)
+            if (Money >= BlueTeam.Objects.Count)
             {
-                Money -= BlueTeam.Count;
+                Money -= BlueTeam.Objects.Count;
 
-                foreach (var fo in BlueTeam)
+                foreach (var fo in BlueTeam.Objects)
                 {
                     fo.BaseFitness += rand.Next(1, 3);
                 }
@@ -314,9 +310,9 @@ namespace Fear
 
                 for (int i = 0; i < 10; i++)
                 {
-                    float worstShield = BlueTeam.Min(fo => fo.Shield);
+                    float worstShield = BlueTeam.Objects.Min(fo => fo.Shield);
 
-                    foreach (var fo in BlueTeam)
+                    foreach (var fo in BlueTeam.Objects)
                     {
                         if (fo.Shield == worstShield)
                         {
@@ -337,9 +333,9 @@ namespace Fear
 
                 for (int i = 0; i < 10; i++)
                 {
-                    float worstSword = BlueTeam.Min(fo => fo.Sword);
+                    float worstSword = BlueTeam.Objects.Min(fo => fo.Sword);
 
-                    foreach (var fo in BlueTeam)
+                    foreach (var fo in BlueTeam.Objects)
                     {
                         if (fo.Sword == worstSword)
                         {
@@ -357,14 +353,14 @@ namespace Fear
         {
             MoneyTB.Text = Money.ToString();
 
-            int blueCounter = BlueTeam.Where(fo => !fo.IsDead).Count();
-            int redCounter = RedTeam.Where(fo => !fo.IsDead).Count();
+            int blueCounter = BlueTeam.Objects.Where(fo => !fo.IsDead).Count();
+            int redCounter = RedTeam.Objects.Where(fo => !fo.IsDead).Count();
 
             if (blueCounter != 0)
-                teamBlueCounter.Text = GetStatForTeam(blueCounter, BlueTeam);
+                teamBlueCounter.Text = GetStatForTeam(blueCounter, BlueTeam.Objects);
 
             if (redCounter != 0)
-                teamRedCounter.Text = GetStatForTeam(redCounter, RedTeam);
+                teamRedCounter.Text = GetStatForTeam(redCounter, RedTeam.Objects);
         }
 
         private void button7_Click(object sender, EventArgs e)
@@ -375,7 +371,7 @@ namespace Fear
 
                 for (int i = 0; i < 3; i++)
                 {
-                    BlueTeam.Add(GetEliteRandomSoldier(Brushes.BlueViolet));
+                    BlueTeam.Objects.Add(GetEliteRandomSoldier(Brushes.BlueViolet));
                 }
             }
             UpdateStats();
@@ -392,7 +388,7 @@ namespace Fear
 
             if (Selected != null)
             {
-                var Targets = RedTeam.Where(o => o.P.X > X0 && o.P.X < X1 && o.P.Y > Y0 && o.P.Y < Y1).ToList();
+                var Targets = RedTeam.Objects.Where(o => o.P.X > X0 && o.P.X < X1 && o.P.Y > Y0 && o.P.Y < Y1).ToList();
 
                 foreach (var s in Selected)
                 {
@@ -402,7 +398,7 @@ namespace Fear
             }
             else
             {
-                Selected = BlueTeam.Where(o => o.P.X > X0 && o.P.X < X1 && o.P.Y > Y0 && o.P.Y < Y1).ToList();
+                Selected = BlueTeam.Objects.Where(o => o.P.X > X0 && o.P.X < X1 && o.P.Y > Y0 && o.P.Y < Y1).ToList();
             }
 
             IsSelecting = false;
@@ -416,6 +412,13 @@ namespace Fear
         private void button9_Click(object sender, EventArgs e)
         {
             timer1.Interval *= 2;
+        }
+
+        private void Restart_Click(object sender, EventArgs e)
+        {
+            Init();
+            end = false;
+            timer1.Start();
         }
 
         private void Form1_MouseDown(object sender, MouseEventArgs e)

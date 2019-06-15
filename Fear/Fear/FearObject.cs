@@ -8,7 +8,7 @@ using System.Windows.Forms;
 
 namespace Fear
 {
-    public enum MoralMode { Normal, Panic, Charge};
+    public enum Moral { Normal, Afraid, Panic, Charge};
 
     public enum HealthState { Healthy, Wounded, HeavyWounded, Dead}
 
@@ -16,18 +16,17 @@ namespace Fear
     {
         Random random = new Random(Guid.NewGuid().GetHashCode());
 
-        public IEnumerable<FearObject> AllEnemies { get; set; }
-        public IEnumerable<FearObject> AllFriends { get; set; }
+        public FUnit EnemyTeam;
 
-        public MoralMode Moral { get; set; }
+        public FUnit MyTeam;
+
+        public Moral Moral { get; set; }
 
         public HealthState Health { get; set; }
 
         public float Shield { get; set; }
 
         public float Sword { get; set; }
-
-        public float Boots { get; set; }
 
         public FPoint P { get; set; }
 
@@ -66,14 +65,19 @@ namespace Fear
             }
 
             e.Graphics.FillRectangle(Brush, P.X, P.Y, Width, Height);
-            if (Fear > 0)
+            if (Moral == Moral.Panic)
             {
                 e.Graphics.FillRectangle(Brushes.Yellow, P.X, P.Y, 3, 3);
             }
 
+            if (Moral == Moral.Afraid)
+            {
+                e.Graphics.FillRectangle(Brushes.LightGreen, P.X+1, P.Y+1, 4, 4);
+            }
+
             if (Stamina < 33)
             {
-                e.Graphics.FillRectangle(Brushes.Purple, P.X , P.Y, 1, 1);
+                e.Graphics.FillRectangle(Brushes.White, P.X+2 , P.Y+2, 2, 2);
             }
         }
 
@@ -99,48 +103,76 @@ namespace Fear
 
         internal void Act()
         {
-            if (random.Next(0, 3) == 0)
+            if (Moral != Moral.Panic && random.Next(0, 5) == 0 && MyTeam.PanicingCount > 2)
             {
                 int frieNormal = 0, friendPanic = 0, enemyNormal = 0, enemyPanic = 0;
-                int frieDead = 0;
+                float radius = 20;
 
-                foreach (var enemy in AllEnemies.Where(f => Distance(P, f.P) < 30))
-                {
-                    if (enemy.Moral == MoralMode.Panic)
-                        enemyPanic++;
-                    else
-                        enemyNormal++;
-                }
+                int minIndexB = FindIndex(MyTeam.ArrayX, P.X - radius);
+                int maxIndexB = FindIndex(MyTeam.ArrayX, P.X + radius);
 
-                foreach (var friend in AllFriends.Where(f => Distance(P, f.P) < 30))
+                for (int i = minIndexB; i <= maxIndexB; i++)
                 {
-                    if (friend.Moral == MoralMode.Panic)
-                        friendPanic++;
-                    else
-                        frieNormal++;
-                    if (friend.IsDead)
-                        frieDead++;
-                }
-                if (friendPanic > 2)
-                {
-                    float likelihoodToPanic = (float)(friendPanic - enemyPanic) * enemyNormal / frieNormal * enemyNormal / frieNormal;
-                    if (enemyNormal < 0)
-                        likelihoodToPanic /= 2F;
-
-                    if (random.Next(0, 100) + 3 * likelihoodToPanic > 100)
+                    if (Math.Abs(MyTeam.ArrayX[i].P.Y - P.Y) > radius) continue;
+                    if (Distance(MyTeam.ArrayX[i].P, P.X, P.Y) < radius)
                     {
-                        Moral = MoralMode.Panic;
-                        Fear = 100;
+                        if (MyTeam.ArrayX[i].Moral == Moral.Panic)
+                            friendPanic++;
+                        else
+                            frieNormal++;
                     }
+                }
+
+                minIndexB = FindIndex(EnemyTeam.ArrayX, P.X - radius);
+                maxIndexB = FindIndex(EnemyTeam.ArrayX, P.X + radius);
+
+                for (int i = minIndexB; i <= maxIndexB; i++)
+                {
+                    if (Math.Abs(EnemyTeam.ArrayX[i].P.Y - P.Y) > radius) continue;
+                    if (Distance(EnemyTeam.ArrayX[i].P, P.X, P.Y) < radius)
+                    {
+                        if (EnemyTeam.ArrayX[i].Moral == Moral.Panic)
+                            enemyPanic++;
+                        else
+                            enemyNormal++;
+                    }
+                }
+
+                float likelihoodToPanic = (float)(friendPanic - enemyPanic) * enemyNormal / frieNormal * enemyNormal / frieNormal;
+                if (enemyNormal < 0)
+                    likelihoodToPanic /= 4F;
+
+                if (random.Next(0, 100) + 3 * likelihoodToPanic > 100)
+                {
+                    Moral = Moral.Panic;
+                    Fear = 100;
                 }
             }
 
             switch (Moral)
             {
-                case MoralMode.Panic: DoPanicProgram(); break;
-                case MoralMode.Charge:
-                case MoralMode.Normal: DoNormalProgram(); break;
+                case Moral.Panic: DoPanicProgram(); break;
+                case Moral.Afraid: DoAfraidProgram(); break;
+                case Moral.Charge:
+                case Moral.Normal: DoNormalProgram(); break;
             }
+        }
+
+        private void DoAfraidProgram()
+        {
+            if (random.Next(0, 5) == 0)
+            {
+                Moral = Moral.Normal;
+            }
+
+        }
+
+        private static bool CloserThan(FPoint p1, FPoint p2, float radius)
+        {
+            if (Math.Abs(p1.X - p2.X) > radius) return false;
+            if (Math.Abs(p1.Y - p2.Y) > radius) return false;
+
+            return Distance(p1, p2) < radius;
         }
 
         private void DoAngerProgram()
@@ -154,7 +186,7 @@ namespace Fear
 
             if (Fear < 0)
             {
-                Moral = MoralMode.Normal;
+                Moral = Moral.Normal;
             }
         }
 
@@ -162,7 +194,7 @@ namespace Fear
         {
             if (Target == null || Target.IsDead || random.Next(0, 50) == 0)
             {
-                Target = GetClosesLeavingTarget(AllEnemies);
+                Target = GetClosesLeavingTarget(EnemyTeam.Objects);
             }
 
             if (Target == null)
@@ -241,7 +273,7 @@ namespace Fear
 
             if (random.Next(0, 1000) + 100 * likelyhoodToHit > 900)
             {
-                Target.Moral = MoralMode.Panic;
+                Target.Moral = Moral.Panic;
                 Target.Fear = 100;
                 return;
             }
@@ -279,12 +311,12 @@ namespace Fear
 
             float baseSpeed = 5;
 
-            if (Moral == MoralMode.Panic)
+            if (Moral == Moral.Panic)
             {
                 baseSpeed *= 1.5F;
             }
 
-            if (Moral == MoralMode.Charge)
+            if (Moral == Moral.Charge)
                 return baseSpeed * 3 / 4;
 
             return baseSpeed / 2;
@@ -300,10 +332,15 @@ namespace Fear
 
             float distance = DistanceToTarget;
 
-            if (DistanceToTarget < 10)
-                Moral = MoralMode.Charge;
+            if (DistanceToTarget < 30)
+            {
+                if (random.Next(0, 7) == 0)
+                    Moral = Moral.Afraid;
+                else 
+                    Moral = Moral.Charge;
+            }
             else
-                Moral = MoralMode.Normal;
+                Moral = Moral.Normal;
 
             if (distance < 5 + step)
             {
@@ -316,11 +353,12 @@ namespace Fear
             float newX = P.X + coeff * Dx;
             float newY = P.Y + coeff * Dy;
 
-            if (IsThereAnyBodyAtTheFinalPoint(newX, newY, 1))
+            if (IsThereAnyBodyAtTheFinalPoint(newX, newY, 2))
             {
                 P.X = 0.8F * newX + 0.2F * P.X;
                 P.Y = 0.8F * newY + 0.2F * P.Y;
-                MoveRandomly(0.5F);
+                //MoveRandomly(0.5F);
+                MoveSidewaysRandomly(newX - P.X, newY - P.Y);
             }
             else
             {
@@ -329,30 +367,93 @@ namespace Fear
             }
 
             if (IsThereAnyBodyAtTheFinalPoint(P.X, P.Y, 0.5F))
-                MoveRandomly(0.5F);
+                MoveSidewaysRandomly(newX - P.X, newY - P.Y);
 
             if (IsThereAnyBodyAtTheFinalPoint(P.X, P.Y, 0.25F))
-                MoveRandomly(0.25F);
+                MoveSidewaysRandomly(newX - P.X, newY - P.Y);
 
             RestricMovement();
         }
 
+        private void MoveSidewaysRandomly(float dx, float dy)
+        {
+            float portion = 1F;
+
+            if (random.Next(0, 2) == 0)
+            {
+                P.X += dy * portion; P.Y -= dx * portion;
+            }
+            else
+            {
+                P.X -= dy * portion; P.Y += dx * portion;
+            }
+        }
+
         private bool IsThereAnyBodyAtTheFinalPoint(float x, float y, float radius)
         {
-            foreach (var en in AllFriends.Where(en => !en.IsDead))
-            {
-                if (Math.Abs(this.P.Y - y) > radius) continue;
-                if (Math.Abs(this.P.X - x) > radius) continue;
+            int minIndexX = FindIndex(MyTeam.ArrayX, P.X - radius);
+            int maxIndexX = FindIndex(MyTeam.ArrayX, P.X + radius);
 
-                if (Distance(en.P, x, y) < radius)
-                    return true;
+            int minIndexY = FindIndex(MyTeam.ArrayY, P.X - radius);
+            int maxIndexY = FindIndex(MyTeam.ArrayY, P.X + radius);
+
+            if (maxIndexX - minIndexX < maxIndexY - minIndexY)
+            {
+                for (int i = minIndexX; i <= maxIndexX; i++)
+                {
+                    if (Distance(MyTeam.ArrayX[i].P, x, y) < radius)
+                        return true;
+                }
             }
+            else
+            {
+                for (int i = minIndexY; i <= maxIndexY; i++)
+                {
+                    if (Distance(MyTeam.ArrayY[i].P, x, y) < radius)
+                        return true;
+                }
+            }
+
             return false;
+        }
+
+        public static int FindIndex(FearObject[] array, float v)
+        {
+            int min = 0;
+            int max = array.Length - 1;
+            int iterations = 0;
+
+            while (min <= max)
+            {
+                iterations++;
+
+                int mid = (min + max) / 2;
+                float midV = array[mid].P.X;
+
+                if (midV == v)
+                    return mid;
+
+                if (mid >= array.Length - 2)
+                    return mid;
+
+                if (midV < v && array[mid+1].P.X >= v)
+                    return mid;
+
+                else if (v < midV)
+                {
+                    max = mid - 1;
+                }
+                else
+                {
+                    min = mid + 1;
+                }
+            }
+            return 0;
         }
 
         private void ReduceStamina(float step)
         {
-            if (Moral != MoralMode.Panic && random.Next(0, 100) + 10F*(Fitness / 100F) > 90F )
+            if (Moral == Moral.Normal && random.Next(0, 100) + 20F*(Fitness / 100F) > 90F )
             {
                 return;
             }

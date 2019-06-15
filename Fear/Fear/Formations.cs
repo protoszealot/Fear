@@ -14,7 +14,7 @@ namespace Fear
         {
             // 3 rectangulars
             int cnt = soldiers.Count();
-            int y1 = 10, y2 = 50, y3 = 70, y4 = 110, y5 = 150, y6 = 190;
+            int y1 = 110, y2 = 150, y3 = 170, y4 = 210, y5 = 250, y6 = 290;
 
             for (int i = 0; i < cnt; i++)
             {
