@@ -30,43 +30,157 @@
         {
             this.components = new System.ComponentModel.Container();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.AutoNext = new System.Windows.Forms.CheckBox();
+            this.AutoReinforce = new System.Windows.Forms.CheckBox();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.FreeReinforcementCnt = new System.Windows.Forms.Button();
+            this.StartCountBtn = new System.Windows.Forms.Button();
+            this.BaseFitnessBtn = new System.Windows.Forms.Button();
+            this.ImproveShields = new System.Windows.Forms.Button();
+            this.GoldTB = new System.Windows.Forms.TextBox();
+            this.ImproveSwords = new System.Windows.Forms.Button();
+            this.Restart = new System.Windows.Forms.Button();
             this.button9 = new System.Windows.Forms.Button();
             this.button8 = new System.Windows.Forms.Button();
-            this.button7 = new System.Windows.Forms.Button();
+            this.BuyEliteSoldiers = new System.Windows.Forms.Button();
             this.button6 = new System.Windows.Forms.Button();
             this.button5 = new System.Windows.Forms.Button();
             this.button4 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
-            this.MoneyTB = new System.Windows.Forms.TextBox();
+            this.SilverTB = new System.Windows.Forms.TextBox();
             this.button2 = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.teamRedCounter = new System.Windows.Forms.TextBox();
             this.teamBlueCounter = new System.Windows.Forms.TextBox();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.Restart = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
+            this.panel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.AutoNext);
+            this.panel1.Controls.Add(this.AutoReinforce);
+            this.panel1.Controls.Add(this.panel2);
             this.panel1.Controls.Add(this.Restart);
             this.panel1.Controls.Add(this.button9);
             this.panel1.Controls.Add(this.button8);
-            this.panel1.Controls.Add(this.button7);
+            this.panel1.Controls.Add(this.BuyEliteSoldiers);
             this.panel1.Controls.Add(this.button6);
             this.panel1.Controls.Add(this.button5);
             this.panel1.Controls.Add(this.button4);
             this.panel1.Controls.Add(this.button3);
-            this.panel1.Controls.Add(this.MoneyTB);
+            this.panel1.Controls.Add(this.SilverTB);
             this.panel1.Controls.Add(this.button2);
             this.panel1.Controls.Add(this.button1);
             this.panel1.Controls.Add(this.teamRedCounter);
             this.panel1.Controls.Add(this.teamBlueCounter);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel1.Location = new System.Drawing.Point(0, 631);
+            this.panel1.Location = new System.Drawing.Point(0, 569);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1028, 81);
+            this.panel1.Size = new System.Drawing.Size(1028, 143);
             this.panel1.TabIndex = 0;
+            // 
+            // AutoNext
+            // 
+            this.AutoNext.AutoSize = true;
+            this.AutoNext.Location = new System.Drawing.Point(941, 46);
+            this.AutoNext.Name = "AutoNext";
+            this.AutoNext.Size = new System.Drawing.Size(70, 17);
+            this.AutoNext.TabIndex = 15;
+            this.AutoNext.Text = "AutoNext";
+            this.AutoNext.UseVisualStyleBackColor = true;
+            // 
+            // AutoReinforce
+            // 
+            this.AutoReinforce.AutoSize = true;
+            this.AutoReinforce.Location = new System.Drawing.Point(542, 45);
+            this.AutoReinforce.Name = "AutoReinforce";
+            this.AutoReinforce.Size = new System.Drawing.Size(94, 17);
+            this.AutoReinforce.TabIndex = 14;
+            this.AutoReinforce.Text = "AutoReinforce";
+            this.AutoReinforce.UseVisualStyleBackColor = true;
+            this.AutoReinforce.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
+            // 
+            // panel2
+            // 
+            this.panel2.Controls.Add(this.FreeReinforcementCnt);
+            this.panel2.Controls.Add(this.StartCountBtn);
+            this.panel2.Controls.Add(this.BaseFitnessBtn);
+            this.panel2.Controls.Add(this.ImproveShields);
+            this.panel2.Controls.Add(this.GoldTB);
+            this.panel2.Controls.Add(this.ImproveSwords);
+            this.panel2.Location = new System.Drawing.Point(441, 76);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(575, 64);
+            this.panel2.TabIndex = 13;
+            // 
+            // FreeReinforcementCnt
+            // 
+            this.FreeReinforcementCnt.Location = new System.Drawing.Point(417, 32);
+            this.FreeReinforcementCnt.Name = "FreeReinforcementCnt";
+            this.FreeReinforcementCnt.Size = new System.Drawing.Size(144, 23);
+            this.FreeReinforcementCnt.TabIndex = 19;
+            this.FreeReinforcementCnt.Text = "FreeReinforcementCnt";
+            this.FreeReinforcementCnt.UseVisualStyleBackColor = true;
+            this.FreeReinforcementCnt.Click += new System.EventHandler(this.FreeReinforcementCnt_Click);
+            // 
+            // StartCountBtn
+            // 
+            this.StartCountBtn.Location = new System.Drawing.Point(417, 6);
+            this.StartCountBtn.Name = "StartCountBtn";
+            this.StartCountBtn.Size = new System.Drawing.Size(144, 23);
+            this.StartCountBtn.TabIndex = 18;
+            this.StartCountBtn.Text = "IncrStartCount";
+            this.StartCountBtn.UseVisualStyleBackColor = true;
+            this.StartCountBtn.Click += new System.EventHandler(this.IncrStartCount_Click);
+            // 
+            // BaseFitnessBtn
+            // 
+            this.BaseFitnessBtn.Location = new System.Drawing.Point(263, 32);
+            this.BaseFitnessBtn.Name = "BaseFitnessBtn";
+            this.BaseFitnessBtn.Size = new System.Drawing.Size(145, 23);
+            this.BaseFitnessBtn.TabIndex = 17;
+            this.BaseFitnessBtn.Text = "ImpBaseFitness";
+            this.BaseFitnessBtn.UseVisualStyleBackColor = true;
+            this.BaseFitnessBtn.Click += new System.EventHandler(this.ImpBaseFitness_Click);
+            // 
+            // ImproveShields
+            // 
+            this.ImproveShields.Location = new System.Drawing.Point(120, 32);
+            this.ImproveShields.Name = "ImproveShields";
+            this.ImproveShields.Size = new System.Drawing.Size(137, 23);
+            this.ImproveShields.TabIndex = 15;
+            this.ImproveShields.Text = "ImproveShields";
+            this.ImproveShields.UseVisualStyleBackColor = true;
+            this.ImproveShields.Click += new System.EventHandler(this.ImproveShields_Click);
+            // 
+            // GoldTB
+            // 
+            this.GoldTB.Location = new System.Drawing.Point(3, 6);
+            this.GoldTB.Name = "GoldTB";
+            this.GoldTB.Size = new System.Drawing.Size(75, 20);
+            this.GoldTB.TabIndex = 14;
+            // 
+            // ImproveSwords
+            // 
+            this.ImproveSwords.Location = new System.Drawing.Point(120, 6);
+            this.ImproveSwords.Name = "ImproveSwords";
+            this.ImproveSwords.Size = new System.Drawing.Size(137, 23);
+            this.ImproveSwords.TabIndex = 8;
+            this.ImproveSwords.Text = "ImproveSwords";
+            this.ImproveSwords.UseVisualStyleBackColor = true;
+            this.ImproveSwords.Click += new System.EventHandler(this.ImproveSwords_Click);
+            // 
+            // Restart
+            // 
+            this.Restart.Location = new System.Drawing.Point(13, 58);
+            this.Restart.Name = "Restart";
+            this.Restart.Size = new System.Drawing.Size(75, 23);
+            this.Restart.TabIndex = 12;
+            this.Restart.Text = "Restart";
+            this.Restart.UseVisualStyleBackColor = true;
+            this.Restart.Click += new System.EventHandler(this.Restart_Click);
             // 
             // button9
             // 
@@ -76,7 +190,7 @@
             this.button9.TabIndex = 11;
             this.button9.Text = "-";
             this.button9.UseVisualStyleBackColor = true;
-            this.button9.Click += new System.EventHandler(this.button9_Click);
+            this.button9.Click += new System.EventHandler(this.slower_Click);
             // 
             // button8
             // 
@@ -86,17 +200,17 @@
             this.button8.TabIndex = 10;
             this.button8.Text = "+";
             this.button8.UseVisualStyleBackColor = true;
-            this.button8.Click += new System.EventHandler(this.button8_Click);
+            this.button8.Click += new System.EventHandler(this.faster_Click);
             // 
-            // button7
+            // BuyEliteSoldiers
             // 
-            this.button7.Location = new System.Drawing.Point(819, 16);
-            this.button7.Name = "button7";
-            this.button7.Size = new System.Drawing.Size(87, 23);
-            this.button7.TabIndex = 9;
-            this.button7.Text = "BuyEliteSoldiers";
-            this.button7.UseVisualStyleBackColor = true;
-            this.button7.Click += new System.EventHandler(this.button7_Click);
+            this.BuyEliteSoldiers.Location = new System.Drawing.Point(819, 16);
+            this.BuyEliteSoldiers.Name = "BuyEliteSoldiers";
+            this.BuyEliteSoldiers.Size = new System.Drawing.Size(87, 23);
+            this.BuyEliteSoldiers.TabIndex = 9;
+            this.BuyEliteSoldiers.Text = "BuyEliteSoldiers";
+            this.BuyEliteSoldiers.UseVisualStyleBackColor = true;
+            this.BuyEliteSoldiers.Click += new System.EventHandler(this.buyEliteSoldiers_Click);
             // 
             // button6
             // 
@@ -136,14 +250,14 @@
             this.button3.TabIndex = 5;
             this.button3.Text = "Reinforce";
             this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.button3_Click);
+            this.button3.Click += new System.EventHandler(this.reinforce_Click);
             // 
-            // MoneyTB
+            // SilverTB
             // 
-            this.MoneyTB.Location = new System.Drawing.Point(542, 14);
-            this.MoneyTB.Name = "MoneyTB";
-            this.MoneyTB.Size = new System.Drawing.Size(75, 20);
-            this.MoneyTB.TabIndex = 4;
+            this.SilverTB.Location = new System.Drawing.Point(542, 14);
+            this.SilverTB.Name = "SilverTB";
+            this.SilverTB.Size = new System.Drawing.Size(75, 20);
+            this.SilverTB.TabIndex = 4;
             // 
             // button2
             // 
@@ -153,7 +267,7 @@
             this.button2.TabIndex = 3;
             this.button2.Text = "Next";
             this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
+            this.button2.Click += new System.EventHandler(this.Next_Click);
             // 
             // button1
             // 
@@ -163,12 +277,12 @@
             this.button1.TabIndex = 2;
             this.button1.Text = "Pause";
             this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.button1.Click += new System.EventHandler(this.pause_resume_Click);
             // 
             // teamRedCounter
             // 
             this.teamRedCounter.ForeColor = System.Drawing.Color.DarkRed;
-            this.teamRedCounter.Location = new System.Drawing.Point(103, 42);
+            this.teamRedCounter.Location = new System.Drawing.Point(13, 111);
             this.teamRedCounter.Name = "teamRedCounter";
             this.teamRedCounter.Size = new System.Drawing.Size(422, 20);
             this.teamRedCounter.TabIndex = 1;
@@ -176,7 +290,7 @@
             // teamBlueCounter
             // 
             this.teamBlueCounter.ForeColor = System.Drawing.SystemColors.MenuHighlight;
-            this.teamBlueCounter.Location = new System.Drawing.Point(103, 16);
+            this.teamBlueCounter.Location = new System.Drawing.Point(13, 87);
             this.teamBlueCounter.Name = "teamBlueCounter";
             this.teamBlueCounter.Size = new System.Drawing.Size(422, 20);
             this.teamBlueCounter.TabIndex = 0;
@@ -186,16 +300,6 @@
             this.timer1.Enabled = true;
             this.timer1.Interval = 10;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
-            // 
-            // Restart
-            // 
-            this.Restart.Location = new System.Drawing.Point(13, 58);
-            this.Restart.Name = "Restart";
-            this.Restart.Size = new System.Drawing.Size(75, 23);
-            this.Restart.TabIndex = 12;
-            this.Restart.Text = "Restart";
-            this.Restart.UseVisualStyleBackColor = true;
-            this.Restart.Click += new System.EventHandler(this.Restart_Click);
             // 
             // Form1
             // 
@@ -210,6 +314,8 @@
             this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseUp);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
+            this.panel2.ResumeLayout(false);
+            this.panel2.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -226,11 +332,20 @@
         private System.Windows.Forms.Button button5;
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.Button button3;
-        private System.Windows.Forms.TextBox MoneyTB;
-        private System.Windows.Forms.Button button7;
+        private System.Windows.Forms.TextBox SilverTB;
+        private System.Windows.Forms.Button BuyEliteSoldiers;
         private System.Windows.Forms.Button button9;
         private System.Windows.Forms.Button button8;
         private System.Windows.Forms.Button Restart;
+        private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.Button BaseFitnessBtn;
+        private System.Windows.Forms.Button ImproveShields;
+        private System.Windows.Forms.TextBox GoldTB;
+        private System.Windows.Forms.Button ImproveSwords;
+        private System.Windows.Forms.Button FreeReinforcementCnt;
+        private System.Windows.Forms.Button StartCountBtn;
+        private System.Windows.Forms.CheckBox AutoReinforce;
+        private System.Windows.Forms.CheckBox AutoNext;
     }
 }
 

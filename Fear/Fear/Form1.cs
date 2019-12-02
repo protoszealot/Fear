@@ -16,25 +16,41 @@ namespace Fear
 
         bool pause = false;
         bool end = false;
-        int RedTeamStartCnt = 40;
-        int BlueTeamStartCnt = 100;
         int ticks = 0;
 
         bool IsSelecting = false;
         float X0, Y0;
-
-        float Money = 0;
 
         public static FUnit BlueTeam = new FUnit();
         public static FUnit RedTeam = new FUnit();
 
         List<FearObject> Selected = null;
 
+        Game Game = new Game();
+
         public Form1()
         {
             InitializeComponent();
+            Game.TeamsRecrewtStats = new RecrewtStats();
+
+            Game.TeamsRecrewtStats.Count = new Stat(50, StartCountBtn, "Start Count", 10);
+            Game.TeamsRecrewtStats.BaseFitness = new Stat(50, BaseFitnessBtn, "Fitness", 2);
+            Game.TeamsRecrewtStats.Sword = new Stat(5, ImproveSwords, "Swords", 1);
+            Game.TeamsRecrewtStats.Shield = new Stat(5, ImproveShields, "Shields", 1);
+            Game.TeamsRecrewtStats.ReinformentsCount = new Stat(10, FreeReinforcementCnt, "Reinforcement", 2);
+
+            ResetEnemy();
 
             Init();
+        }
+
+        private void ResetEnemy()
+        {
+            Game.EnemyRecrewtStats = new RecrewtStats();
+            Game.EnemyRecrewtStats.Count = new Stat(20);
+            Game.EnemyRecrewtStats.BaseFitness = new Stat(50);
+            Game.EnemyRecrewtStats.Sword = new Stat(5);
+            Game.EnemyRecrewtStats.Shield = new Stat(5);
         }
 
         private void Init()
@@ -42,17 +58,17 @@ namespace Fear
             BlueTeam.Init();
             RedTeam.Init();
 
-            for (int i = 0; i < BlueTeamStartCnt; i++)
+            for (int i = 0; i < Game.TeamsRecrewtStats.Count.Value; i++)
             {
-                var soldier = GetRandomSoldier(Brushes.BlueViolet);
+                var soldier = GetRandomSoldier(Brushes.BlueViolet, Game.TeamsRecrewtStats);
                 BlueTeam.Objects.Add(soldier);
 
                 soldier.P = new FPoint { X = rand.Next(10, 25), Y = rand.Next(300, 400) };
             }
 
-            for (int i = 0; i < RedTeamStartCnt; i++)
+            for (int i = 0; i < Game.EnemyRecrewtStats.Count.Value; i++)
             {
-                var soldier = GetRandomSoldier(Brushes.Red);
+                var soldier = GetRandomSoldier(Brushes.Red, Game.EnemyRecrewtStats);
                 RedTeam.Objects.Add(soldier);
 
                 soldier.P = new FPoint { X = rand.Next(400, 425), Y = rand.Next(300, 400) };
@@ -127,18 +143,21 @@ namespace Fear
                 if (!end)
                 {
                     //MessageBox.Show("Victory!!!");
-                    Money += RedTeam.Objects.Count * 3;
-                    MoneyTB.Text = Money.ToString();
+                    Game.Silver += RedTeam.Objects.Count;
+                    SilverTB.Text = Game.Silver.ToString();
+
+                    Game.Gold += 1;
+                    GoldTB.Text = Game.Gold.ToString();
 
                     // for free
-                    for (int i = 0; i < 10; i++)
-                        BlueTeam.Objects.Add(GetRandomSoldier(Brushes.BlueViolet));
+                    for (int i = 0; i < Game.TeamsRecrewtStats.ReinformentsCount.Value; i++)
+                        BlueTeam.Objects.Add(GetRandomSoldier(Brushes.BlueViolet, Game.TeamsRecrewtStats));
 
-                    BlueTeam.Objects.Add(GetEliteRandomSoldier(Brushes.BlueViolet));
+                    //BlueTeam.Objects.Add(GetEliteRandomSoldier(Brushes.BlueViolet));
 
                     foreach (var fo in BlueTeam.Objects)
                     {
-                        fo.BaseFitness += rand.Next(0, 3);
+                        fo.BaseFitness += rand.Next(0, 1);
                     }
 
                     BlueTeam.Objects = BlueTeam.Objects.Where(s => !s.IsDead).ToList();
@@ -146,7 +165,7 @@ namespace Fear
                     int deadCnt = dead.Count();
 
                     // take Amunition From the dead
-                    for (int i = 0; i < 3000; i++)
+                    for (int i = 0; i < 30000; i++)
                     {
                         var sol = BlueTeam.Objects.ElementAt(rand.Next(0, BlueTeam.Objects.Count));
                         var corpse = dead.ElementAt(rand.Next(0, deadCnt));
@@ -155,11 +174,21 @@ namespace Fear
 
                     UpdateStats();
 
+                    if (AutoReinforce.Checked)
+                    {
+                        for(int i=0; i< 100; i++) TryReinforce();
+                    }
+
                     end = true;
+
+                    if (AutoNext.Checked)
+                    {
+                        NextRound();
+                    }
                 }
             }
 
-            if(++ticks % 3 == 0)
+            if(++ticks % 5 == 0)
                 Invalidate();
         }
 
@@ -174,7 +203,7 @@ namespace Fear
             return string.Format("Cnt={0}, Sta={1}, Fit={2}, Swo={3}, Shi={4}, BF={5}", counter, Stamina, Fitness, Sword, Shield, Fit);
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void pause_resume_Click(object sender, EventArgs e)
         {
             if (pause == false)
             {
@@ -190,15 +219,33 @@ namespace Fear
             }
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void Next_Click(object sender, EventArgs e)
         {
+            NextRound();
+        }
+
+        private void NextRound()
+        { 
             RedTeam.Reset();
 
-            RedTeamStartCnt += 10;
+            float increase = 0.4f * Game.EnemyRecrewtStats.Count.Value;
 
-            int x = rand.Next(5,15);
+            Game.EnemyRecrewtStats.Count.Value += (int)increase;
 
-            int y = rand.Next(200, 400);
+            if (rand.Next(0, 3) == 1)
+            {
+                Game.EnemyRecrewtStats.Sword.Value += 1;
+            }
+
+            if (rand.Next(0, 3) == 1)
+            {
+                Game.EnemyRecrewtStats.Shield.Value += 1;
+            }
+
+            if (rand.Next(0, 3) == 1)
+            {
+                Game.EnemyRecrewtStats.BaseFitness.Value += 1;
+            }
 
             foreach ( var fo in BlueTeam.Objects)
             {
@@ -211,9 +258,9 @@ namespace Fear
 
             Formations.BuildFormation(BlueTeam.Objects, 5, 25);
 
-            for (int i = 0; i < RedTeamStartCnt; i++)
+            for (int i = 0; i < Game.EnemyRecrewtStats.Count.Value; i++)
             {
-                var soldier = GetRandomSoldier(Brushes.Red);
+                var soldier = GetRandomSoldier(Brushes.Red, Game.EnemyRecrewtStats);
                 RedTeam.Objects.Add(soldier);
 
                 //soldier.P = new FPoint { X = rand.Next(400, 425), Y = rand.Next(300, 400) };
@@ -226,7 +273,7 @@ namespace Fear
             timer1.Start();
         }
 
-        FearObject GetRandomSoldier(Brush brush) {
+        FearObject GetRandomSoldier(Brush brush, RecrewtStats stats) {
             return new FearObject
             {
                 P = new FPoint { X = 0, Y = 0 },
@@ -234,10 +281,10 @@ namespace Fear
                 Width = 5,
                 Brush = brush,
                 Stamina = 100,
-                Fitness = 65 + rand.Next(0, 10),
-                BaseFitness = 65 + rand.Next(0, 10),
-                Sword = 5 + rand.Next(0, 20),
-                Shield = 5 + rand.Next(0, 20),
+                Fitness = stats.BaseFitness.Value + rand.Next(0, 10),
+                BaseFitness = stats.BaseFitness.Value + rand.Next(0, 10),
+                Sword = stats.Sword.Value + rand.Next(0, 20),
+                Shield = stats.Shield.Value + rand.Next(0, 20),
                 Moral = Moral.Normal
             };
         }
@@ -276,23 +323,28 @@ namespace Fear
             };
         }
 
-        private void button3_Click(object sender, EventArgs e)
+        private void reinforce_Click(object sender, EventArgs e)
         {
-            if (Money >= 100)
-            {
-                Money -= 100;
+            TryReinforce();
+        }
 
-                for(int i = 0; i < 10; i++)
-                    BlueTeam.Objects.Add(GetRandomSoldier(Brushes.BlueViolet));
+        private void TryReinforce()
+        {
+            if (Game.Silver >= 100)
+            {
+                Game.Silver -= 100;
+
+                for (int i = 0; i < Game.TeamsRecrewtStats.ReinformentsCount.Value; i++)
+                    BlueTeam.Objects.Add(GetRandomSoldier(Brushes.BlueViolet, Game.TeamsRecrewtStats));
             }
             UpdateStats();
         }
 
         private void button6_Click(object sender, EventArgs e)
         {
-            if (Money >= BlueTeam.Objects.Count)
+            if (Game.Silver >= BlueTeam.Objects.Count)
             {
-                Money -= BlueTeam.Objects.Count;
+                Game.Silver -= BlueTeam.Objects.Count;
 
                 foreach (var fo in BlueTeam.Objects)
                 {
@@ -304,9 +356,9 @@ namespace Fear
 
         private void button4_Click(object sender, EventArgs e)
         {
-            if (Money >= 100)
+            if (Game.Silver >= 100)
             {
-                Money -= 100;
+                Game.Silver -= 100;
 
                 for (int i = 0; i < 10; i++)
                 {
@@ -327,9 +379,9 @@ namespace Fear
 
         private void button5_Click(object sender, EventArgs e)
         {
-            if (Money >= 100)
+            if (Game.Silver >= 100)
             {
-                Money -= 100;
+                Game.Silver -= 100;
 
                 for (int i = 0; i < 10; i++)
                 {
@@ -351,7 +403,8 @@ namespace Fear
 
         private void UpdateStats()
         {
-            MoneyTB.Text = Money.ToString();
+            SilverTB.Text = Game.Silver.ToString();
+            GoldTB.Text = Game.Gold.ToString();
 
             int blueCounter = BlueTeam.Objects.Where(fo => !fo.IsDead).Count();
             int redCounter = RedTeam.Objects.Where(fo => !fo.IsDead).Count();
@@ -363,11 +416,11 @@ namespace Fear
                 teamRedCounter.Text = GetStatForTeam(redCounter, RedTeam.Objects);
         }
 
-        private void button7_Click(object sender, EventArgs e)
+        private void buyEliteSoldiers_Click(object sender, EventArgs e)
         {
-            if (Money >= 100)
+            if (Game.Silver >= 100)
             {
-                Money -= 100;
+                Game.Silver -= 100;
 
                 for (int i = 0; i < 3; i++)
                 {
@@ -404,21 +457,65 @@ namespace Fear
             IsSelecting = false;
         }
 
-        private void button8_Click(object sender, EventArgs e)
+        private void faster_Click(object sender, EventArgs e)
         {
             timer1.Interval = Math.Max(timer1.Interval / 2, 1);
         }
 
-        private void button9_Click(object sender, EventArgs e)
+        private void slower_Click(object sender, EventArgs e)
         {
             timer1.Interval *= 2;
         }
 
         private void Restart_Click(object sender, EventArgs e)
         {
+            ResetEnemy();
+
+            Game.Silver = 0;
+
             Init();
             end = false;
             timer1.Start();
+        }
+
+        private void ImproveSwords_Click(object sender, EventArgs e)
+        {
+            Game.Gold = Game.TeamsRecrewtStats.Sword.UpgradeForGold(Game.Gold);
+
+            UpdateStats();
+        }
+
+        private void ImproveShields_Click(object sender, EventArgs e)
+        {
+            Game.Gold = Game.TeamsRecrewtStats.Shield.UpgradeForGold(Game.Gold);
+
+            UpdateStats();
+        }
+
+        private void IncrStartCount_Click(object sender, EventArgs e)
+        {
+            Game.Gold = Game.TeamsRecrewtStats.Count.UpgradeForGold(Game.Gold);
+
+            UpdateStats();
+        }
+
+        private void ImpBaseFitness_Click(object sender, EventArgs e)
+        {
+            Game.Gold = Game.TeamsRecrewtStats.BaseFitness.UpgradeForGold(Game.Gold);
+
+            UpdateStats();
+        }
+
+        private void FreeReinforcementCnt_Click(object sender, EventArgs e)
+        {
+            Game.Gold = Game.TeamsRecrewtStats.ReinformentsCount.UpgradeForGold(Game.Gold);
+
+            UpdateStats();
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+
         }
 
         private void Form1_MouseDown(object sender, MouseEventArgs e)

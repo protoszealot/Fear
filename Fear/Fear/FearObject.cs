@@ -37,7 +37,9 @@ namespace Fear
         public Brush Brush { get; set; }
 
         private float _stamina;
+
         public float Stamina { get { return _stamina; } set { _stamina = Math.Max(0, value); } }
+
         public float Fitness { get; set; }
 
         public float BaseFitness { get; set; }
@@ -47,6 +49,7 @@ namespace Fear
         public System.Drawing.Color Color { get; set; }
 
         public FearObject Target { get; set; }
+
         public float DistanceToTarget {
             get
             {
@@ -64,7 +67,9 @@ namespace Fear
                 return;
             }
 
-            e.Graphics.FillRectangle(Brush, P.X, P.Y, Width, Height);
+            e.Graphics.FillRectangle(Brush, P.X, P.Y, Width+1, Height+1);
+            e.Graphics.FillRectangle(Brush, P.X+3, P.Y+3, Width-1, Height-1);
+
             if (Moral == Moral.Panic)
             {
                 e.Graphics.FillRectangle(Brushes.Yellow, P.X, P.Y, 3, 3);
@@ -160,11 +165,15 @@ namespace Fear
 
         private void DoAfraidProgram()
         {
-            if (random.Next(0, 5) == 0)
+            int decision = random.Next(0, 5);
+            if (decision == 0)
             {
                 Moral = Moral.Normal;
             }
-
+            else if (decision < 4)
+            {
+                RetreatFromTarget();
+            }
         }
 
         private static bool CloserThan(FPoint p1, FPoint p2, float radius)
@@ -175,13 +184,9 @@ namespace Fear
             return Distance(p1, p2) < radius;
         }
 
-        private void DoAngerProgram()
-        {
-        }
-
         private void DoPanicProgram()
         {
-            PanicFromTarget();
+            RetreatFromTarget();
             Fear -= random.Next(0, 3);
 
             if (Fear < 0)
@@ -255,7 +260,7 @@ namespace Fear
             float likelyhoodToHit = Stamina * Sword * Sword / Target.Stamina / Target.Shield / Target.Shield;
 
             // fight:
-            if (random.Next(0, 1000) + 100 * likelyhoodToHit > 900)
+            if (random.Next(0, 1000) + 200 * likelyhoodToHit > 990)
             {
                 Target.Health = HealthState.Dead;
 
@@ -264,18 +269,24 @@ namespace Fear
                 return;
             }
 
-            if (random.Next(0, 1000) + 100 * likelyhoodToHit > 900)
+            if (random.Next(0, 1000) + 200 * likelyhoodToHit > 990)
             {
                 Target.Stamina -= 50; // kinda wound
                 Target.Target = this;
                 return;
             }
 
-            if (random.Next(0, 1000) + 100 * likelyhoodToHit > 900)
+            if (random.Next(0, 1000) + 200 * likelyhoodToHit > 990)
             {
                 Target.Moral = Moral.Panic;
                 Target.Fear = 100;
                 return;
+            }
+
+            if (Target.Moral == Moral.Afraid)
+            {
+                Target.Target = this;
+                Target.Moral = Moral.Normal;
             }
         }
 
@@ -334,7 +345,7 @@ namespace Fear
 
             if (DistanceToTarget < 30)
             {
-                if (random.Next(0, 7) == 0)
+                if (Moral != Moral.Charge && random.Next(0, 7) < 6 )
                     Moral = Moral.Afraid;
                 else 
                     Moral = Moral.Charge;
@@ -477,7 +488,7 @@ namespace Fear
             }
         }
 
-        internal void PanicFromTarget()
+        internal void RetreatFromTarget()
         {
             float step = GetStep();
             if (step == 0) return;
